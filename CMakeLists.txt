@@ -9,7 +9,7 @@ project(dijkstra_global_planner)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  roscpy
+  rospy
   std_msgs
 )
 
@@ -105,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES dijkstra_global_planner
-#  CATKIN_DEPENDS roscpp roscpy std_msgs
+#  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
