@@ -1,0 +1,5 @@
+<launch>
+
+    <node pkg="dijkstra_global_planner" type="dijkstra_node" name="dijkstra" ns="global_planner"/>
+
+</launch>
