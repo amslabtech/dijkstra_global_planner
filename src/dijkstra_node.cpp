@@ -31,8 +31,10 @@ class Node
 std::vector<Node> nodes;
 std::vector<int> checkpoints;
 std::vector<amsl_navigation_msgs::Edge> edges;
+amsl_navigation_msgs::Edge current_edge;
 int num_checkpoints=-1;
 int num_nodes=-1;
+bool sub_current_edge = false;
 
 void NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstPtr& msg)
 {
@@ -75,6 +77,20 @@ void CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 	for(int i=0;i<num_checkpoints; i++){
 		checkpoints.push_back(check_points.data[i]);
 	}
+}
+
+void CurrentEdgeCallback(const amsl_navigation_msgs::EdgeConstPtr& msg)
+{
+	current_edge = *msg;
+	std::string type = "add_node";
+	std::vector<int> child_id;
+	child_id.push_back(current_edge.node0_id);
+	child_id.push_back(current_edge.node1_id);
+	std::vector<double> child_cost;
+	child_cost.push_back(current_edge.distance*current_edge.progress);
+	child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
+	Node node(num_nodes+1,type,child_id,child_cost);
+	sub_current_edge = true;
 }
 
 std::vector<int> Dijkstra(std::vector<Node> nodes, int start_id, int goal_id)
@@ -130,6 +146,7 @@ int main(int argc, char **argv)
 	//subscriber
     ros::Subscriber node_edge_map_sub = nh.subscribe("/node_edge_map",1,NodeEdgeMapCallback);
     ros::Subscriber check_point_sub = nh.subscribe("/node_edge_map/checkpoint",1,CheckPointCallback);
+    ros::Subscriber current_edge_sub = nh.subscribe("/estimated_pose/edge",1,CurrentEdgeCallback);
 
 	//publisher
     ros::Publisher global_path_pub = nh.advertise<std_msgs::Int32MultiArray>("/global_path",100,true);
