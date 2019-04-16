@@ -77,6 +77,7 @@ void CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 {
 	std_msgs::Int32MultiArray check_points = *msg;
 	num_checkpoints = check_points.data.size();
+	checkpoints.clear();
 	for(int i=0;i<num_checkpoints; i++){
 		checkpoints.push_back(check_points.data[i]);
 	}
@@ -146,8 +147,9 @@ void MakeAndPublishGlobalPath()
 	std::cout << "-----------------------" << std::endl;
 	std_msgs::Int32MultiArray global_path;
 	if(num_checkpoints != -1 and num_nodes != -1){
-		std::cout << checkpoints[0] << std::endl;
-		// global_path.data.push_back(checkpoints[0]);
+		// std::cout << "checkpoints[0]" << std::endl;
+		// std::cout << checkpoints[0] << std::endl;
+		global_path.data.push_back(checkpoints[0]);
 		for(int i=0; i<num_checkpoints-1; i++){
 			std::vector<int> path;
 			// std::cout << checkpoints[i] << " to "<< checkpoints[i+1] << std::endl;
@@ -159,7 +161,7 @@ void MakeAndPublishGlobalPath()
 		for(int i=0;i<global_path.data.size();i++){
 			std::cout << global_path.data[i] << std::endl;
 		}
-		std::cout << "publish global path" << std::endl;
+		// std::cout << "publish global path" << std::endl;
 		global_path_pub.publish(global_path);
 	}
 }
@@ -179,6 +181,7 @@ bool ReplanHandler(amsl_navigation_msgs::Replan::Request& request, amsl_navigati
 {
 	SetCurrentEdge(request.edge);
 	MakeAndPublishGlobalPath();
+	response.succeeded = true;
 	return true;
 }
 
