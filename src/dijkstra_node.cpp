@@ -3,6 +3,7 @@
 #include <amsl_navigation_msgs/Node.h>
 #include <amsl_navigation_msgs/Edge.h>
 #include <amsl_navigation_msgs/NodeEdgeMap.h>
+#include <amsl_navigation_msgs/Replan.h>
 
 class Node
 {
@@ -35,6 +36,8 @@ amsl_navigation_msgs::Edge current_edge;
 int num_checkpoints=-1;
 int num_nodes=-1;
 bool sub_current_edge = false;
+bool first_sub_edge_flag = true;
+ros::Publisher global_path_pub;
 
 void NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstPtr& msg)
 {
@@ -79,9 +82,9 @@ void CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 	}
 }
 
-void CurrentEdgeCallback(const amsl_navigation_msgs::EdgeConstPtr& msg)
+void SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 {
-	current_edge = *msg;
+	current_edge = edge;
 	std::string type = "add_node";
 	std::vector<int> child_id;
 	child_id.push_back(current_edge.node0_id);
@@ -90,7 +93,6 @@ void CurrentEdgeCallback(const amsl_navigation_msgs::EdgeConstPtr& msg)
 	child_cost.push_back(current_edge.distance*current_edge.progress);
 	child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
 	Node node(num_nodes+1,type,child_id,child_cost);
-	sub_current_edge = true;
 }
 
 std::vector<int> Dijkstra(std::vector<Node> nodes, int start_id, int goal_id)
@@ -139,6 +141,47 @@ std::vector<int> Dijkstra(std::vector<Node> nodes, int start_id, int goal_id)
 	return path;
 }
 
+void MakeAndPublishGlobalPath()
+{
+	std::cout << "-----------------------" << std::endl;
+	std_msgs::Int32MultiArray global_path;
+	if(num_checkpoints != -1 and num_nodes != -1){
+		std::cout << checkpoints[0] << std::endl;
+		// global_path.data.push_back(checkpoints[0]);
+		for(int i=0; i<num_checkpoints-1; i++){
+			std::vector<int> path;
+			// std::cout << checkpoints[i] << " to "<< checkpoints[i+1] << std::endl;
+			path = Dijkstra(nodes,checkpoints[i],checkpoints[i+1]);
+			for(int j=0;j<path.size();j++){
+				global_path.data.push_back(path[j]);
+			}
+		}
+		for(int i=0;i<global_path.data.size();i++){
+			std::cout << global_path.data[i] << std::endl;
+		}
+		std::cout << "publish global path" << std::endl;
+		global_path_pub.publish(global_path);
+	}
+}
+
+void CurrentEdgeCallback(const amsl_navigation_msgs::EdgeConstPtr& msg)
+{
+	amsl_navigation_msgs::Edge _edge = *msg;
+	SetCurrentEdge(_edge);
+	if(first_sub_edge_flag){
+		MakeAndPublishGlobalPath();
+		first_sub_edge_flag = false;
+	}
+	sub_current_edge = true;
+}
+
+bool ReplanHandler(amsl_navigation_msgs::Replan::Request& request, amsl_navigation_msgs::Replan::Response& response)
+{
+	SetCurrentEdge(request.edge);
+	MakeAndPublishGlobalPath();
+	return true;
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "dijkstra");
@@ -149,30 +192,11 @@ int main(int argc, char **argv)
     ros::Subscriber current_edge_sub = nh.subscribe("/estimated_pose/edge",1,CurrentEdgeCallback);
 
 	//publisher
-    ros::Publisher global_path_pub = nh.advertise<std_msgs::Int32MultiArray>("/global_path",100,true);
+    global_path_pub = nh.advertise<std_msgs::Int32MultiArray>("/global_path",1,true);
+
+	// service server
+	ros::ServiceServer replan_server = nh.advertiseService("/global_path/replan", ReplanHandler);
     
-	ros::Rate loop_rate(10);
-	while(ros::ok()){
-		std::cout << "-----------------------" << std::endl;
-		std_msgs::Int32MultiArray global_path;
-		if(num_checkpoints != -1 and num_nodes != -1){
-			std::cout << checkpoints[0] << std::endl;
-			// global_path.data.push_back(checkpoints[0]);
-			for(int i=0; i<num_checkpoints-1; i++){
-				std::vector<int> path;
-				// std::cout << checkpoints[i] << " to "<< checkpoints[i+1] << std::endl;
-				path = Dijkstra(nodes,checkpoints[i],checkpoints[i+1]);
-				for(int j=0;j<path.size();j++){
-					global_path.data.push_back(path[j]);
-				}
-			}
-			for(int i=0;i<global_path.data.size();i++){
-				std::cout << global_path.data[i] << std::endl;
-			}
-			global_path_pub.publish(global_path);
-		}
-		ros::spinOnce();
-		loop_rate.sleep();
-	}
+	ros::spin();
     return 0;
 }
