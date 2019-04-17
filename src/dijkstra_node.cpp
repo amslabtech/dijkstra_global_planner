@@ -44,6 +44,8 @@ void NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstPtr& msg)
 	amsl_navigation_msgs::NodeEdgeMap map = *msg;
 	num_nodes = map.nodes.size();
 	int num_edges = map.edges.size();
+	nodes.clear();
+	edges.clear();
 	for(int i=0; i<num_edges; i++){
 		edges.push_back(map.edges[i]);
 	}
