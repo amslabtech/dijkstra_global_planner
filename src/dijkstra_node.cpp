@@ -95,22 +95,36 @@ void CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 	}
 }
 
+int childid2index(Node node, int id){
+	for(int i=0;i<node.child_id.size();i++){
+		if(node.child_id[i] == id){
+			return i;
+		}
+	}
+	return -1;
+}
+
 void SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 {
 	current_edge = edge;
-	// std::string type = "add_node";
-	// std::vector<int> child_id;
-	// child_id.push_back(current_edge.node0_id);
-	// child_id.push_back(current_edge.node1_id);
-	// std::vector<double> child_cost;
-	// child_cost.push_back(current_edge.distance*current_edge.progress);
-	// child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
-	// Node node(current_edge.node0_id,type,child_id,child_cost);
-	// nodes.push_back(node);
-	checkpoints.insert(checkpoints.begin(), current_edge.node0_id);
-	num_checkpoints = checkpoints.size();
-	for(int i=0;i<num_checkpoints; i++){
-		std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
+	if(current_edge.progress != 0.0){
+		std::string type = "add_node";
+		std::vector<int> child_id;
+		child_id.push_back(current_edge.node0_id);
+		child_id.push_back(current_edge.node1_id);
+		std::vector<double> child_cost;
+		child_cost.push_back(current_edge.distance*current_edge.progress);
+		child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
+		int start_node_id = nodes.size();
+		Node node(start_node_id, type, child_id, child_cost);
+		nodes.push_back(node);
+		checkpoints.insert(checkpoints.begin(), start_node_id);
+	}else{
+		checkpoints.insert(checkpoints.begin(), current_edge.node0_id);
+		num_checkpoints = checkpoints.size();
+		for(int i=0;i<num_checkpoints; i++){
+			std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
+		}
 	}
 }
 
@@ -121,11 +135,12 @@ std::vector<int> Dijkstra(std::vector<Node> nodes, int start_id, int goal_id)
 	nodes[id2index(nodes,start_id)].open = true;
 	bool found = false;
 	bool resign = false;
+	int num_node = nodes.size();
 	while(!found and !resign){
 		//update open list
 		int min_id = -1;
 		float min_cost = 100000;
-		for(int i=0; i< num_nodes; i++){
+		for(int i=0; i< num_node; i++){
 			if(nodes[i].open==true){
 				if(nodes[i].cost < min_cost){
 					min_cost = nodes[i].cost;
@@ -172,19 +187,26 @@ void MakeAndPublishGlobalPath()
 	if(num_checkpoints != -1 and num_nodes != -1){
 		// std::cout << "checkpoints[0]" << std::endl;
 		// std::cout << checkpoints[0] << std::endl;
-		global_path.data.push_back(checkpoints[0]);
+		if(nodes[id2index(nodes,checkpoints[0])].type=="add_node"){
+			std::cout << "add node" << std::endl;
+			global_path.data.push_back(nodes[id2index(nodes,checkpoints[0])].child_id[0]);
+		}else{
+			global_path.data.push_back(checkpoints[0]);
+		}
 		for(int i=0; i<num_checkpoints-1; i++){
 			std::vector<int> path;
 			// std::cout << checkpoints[i] << " to "<< checkpoints[i+1] << std::endl;
 			path = Dijkstra(nodes,checkpoints[i],checkpoints[i+1]);
-			for(int j=0;j<path.size();j++){
+			for(int j=0; j<path.size(); j++){
 				global_path.data.push_back(path[j]);
 			}
 		}
+		std::cout << "------------------------------------------" << std::endl;
+		std::cout << "global_path" << std::endl;
 		for(int i=0;i<global_path.data.size();i++){
 			std::cout << global_path.data[i] << std::endl;
 		}
-		// std::cout << "publish global path" << std::endl;
+		std::cout << "------------------------------------------" << std::endl;
 		global_path_pub.publish(global_path);
 	}
 }
