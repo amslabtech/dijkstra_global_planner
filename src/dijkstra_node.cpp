@@ -67,10 +67,10 @@ void NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstPtr& msg)
 				child_id.push_back(edges[j].node1_id);
 				child_cost.push_back(edges[j].distance);
 			}
-			if(edges[j].node1_id == id){
-				child_id.push_back(edges[j].node0_id);
-				child_cost.push_back(edges[j].distance);
-			}
+			// if(edges[j].node1_id == id){
+			// 	child_id.push_back(edges[j].node0_id);
+			// 	child_cost.push_back(edges[j].distance);
+			// }
 		}
 		int num_child = child_id.size();
 		Node node(id, map.nodes[i].type,child_id,child_cost);
