@@ -1,4 +1,6 @@
 # dijkstra_global_planner
+![issue_opened](https://img.shields.io/github/issues/amslabtech/dijkstra_global_planner.svg)
+![issue_closed](https://img.shields.io/github/issues-closed/amslabtech/dijkstra_global_planner.svg)
 
 ## Published topics
 - /global_path (std_msgs/Int32MultiArray)
