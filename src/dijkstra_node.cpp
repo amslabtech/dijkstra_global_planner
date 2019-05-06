@@ -235,7 +235,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "dijkstra");
     ros::NodeHandle nh;
 	//subscriber
-    ros::Subscriber node_edge_map_sub = nh.subscribe("/node_edge_map",1,NodeEdgeMapCallback);
+    ros::Subscriber node_edge_map_sub = nh.subscribe("/node_edge_map/map",1,NodeEdgeMapCallback);
     ros::Subscriber check_point_sub = nh.subscribe("/node_edge_map/checkpoint",1,CheckPointCallback);
     ros::Subscriber current_edge_sub = nh.subscribe("/estimated_pose/edge",1,CurrentEdgeCallback);
 
