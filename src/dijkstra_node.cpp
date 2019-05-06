@@ -243,6 +243,7 @@ void Dijkstra::MakeAndPublishGlobalPath()
 				global_path.data.push_back(path[j]);
 			}
 		}
+		global_path.data.erase(global_path.data.begin());
 		std::cout << "------------------------------------------" << std::endl;
 		std::cout << "global_path" << std::endl;
 		for(int i=0;i<global_path.data.size();i++){
