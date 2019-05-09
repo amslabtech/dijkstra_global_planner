@@ -17,25 +17,30 @@ class GlobalPathViz:
         self.global_path_marker_pub = rospy.Publisher('/node_edge_map/viz/global_path', MarkerArray, queue_size=1, latch=True)
 
         #Subscriber
-        self.global_path_sub = rospy.Subscriber('/global_path', Int32MultiArray, self.global_path_callback)
         self.node_edge_map_sub = rospy.Subscriber('/node_edge_map/map', NodeEdgeMap, self.node_edge_map_callback)
+        self.global_path_sub = rospy.Subscriber('/global_path', Int32MultiArray, self.global_path_callback)
 
         self.global_path_marker = MarkerArray()
         self.global_path = Int32MultiArray()
         self.node_edge_map = NodeEdgeMap()
         self.sub_map = False
 
-        rospy.spin()
-
-    def global_path_callback(self, msg):
-        self.global_path = msg
-        if self.sub_map:
-            self.make_global_path_marker()
-            self.global_path_marker_pub.publish(self.global_path_marker)
-
     def node_edge_map_callback(self, msg):
         self.node_edge_map = msg
         self.sub_map = True
+
+    def global_path_callback(self, msg):
+        self.global_path = msg
+
+    def process(self):
+        rate = rospy.Rate(10)
+
+        while not rospy.is_shutdown():
+            if self.sub_map:
+                self.make_global_path_marker()
+                self.global_path_marker_pub.publish(self.global_path_marker)
+
+            rate.sleep()
 
     def make_global_path_marker(self):
         global_path_marker = MarkerArray()
@@ -46,6 +51,11 @@ class GlobalPathViz:
             x = (self.node_edge_map.nodes[current_node_id].point.x + self.node_edge_map.nodes[next_node_id].point.x ) / 2.0
             y = (self.node_edge_map.nodes[current_node_id].point.y + self.node_edge_map.nodes[next_node_id].point.y ) / 2.0
             yaw = np.arctan2(self.node_edge_map.nodes[next_node_id].point.y - self.node_edge_map.nodes[current_node_id].point.y, self.node_edge_map.nodes[next_node_id].point.x - self.node_edge_map.nodes[current_node_id].point.x)
+            length  = 0.0
+            for j in range(len(self.node_edge_map.edges)):
+                if self.node_edge_map.edges[j].node0_id == current_node_id: 
+                    if self.node_edge_map.edges[j].node1_id == next_node_id: 
+                        length = self.node_edge_map.edges[j].distance*0.3
 
             n = Marker()
             n.ns = "global_path"
@@ -55,7 +65,7 @@ class GlobalPathViz:
             n.action = Marker().ADD
             n.type = Marker().ARROW
             n.lifetime = rospy.Duration()
-            self.set_marker_scale(n, 1.0, 0.5, 0.1)
+            self.set_marker_scale(n, length, 0.5, 0.1)
             self.set_marker_rgb(n, 1., 1., 1.)
             self.set_marker_position(n, x, y, 1.0)
             self.set_marker_orientation(n, 0, 0, yaw)
@@ -84,3 +94,4 @@ class GlobalPathViz:
 
 if __name__=='__main__':
     global_path_viz = GlobalPathViz()
+    global_path_viz.process()

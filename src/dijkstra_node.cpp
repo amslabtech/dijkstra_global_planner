@@ -156,7 +156,6 @@ void Dijkstra::CurrentEdgeCallback(const amsl_navigation_msgs::EdgeConstPtr& msg
 	amsl_navigation_msgs::Edge _edge = *msg;
 	SetCurrentEdge(_edge);
 	if(first_sub_edge_flag){
-		SetCurrentEdge(first_edge);
 		MakeAndPublishGlobalPath();
 		first_sub_edge_flag = false;
 	}
@@ -224,6 +223,7 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 
 void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 {
+	std::cout << "-----------------------" << std::endl;
 	current_edge = edge;
 	if(current_edge.progress != 0.0){
 		std::string type = "add_node";
@@ -238,7 +238,9 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 		nodes.push_back(node);
 		checkpoints.insert(checkpoints.begin(), start_node_id);
 	}else{
-		checkpoints.insert(checkpoints.begin(), current_edge.node0_id);
+		if(current_edge.node0_id != checkpoints[0]){
+			checkpoints.insert(checkpoints.begin(), current_edge.node0_id);
+		}
 		num_checkpoints = checkpoints.size();
 	}
 	for(int i=0;i<num_checkpoints; i++){
@@ -252,13 +254,11 @@ void Dijkstra::MakeAndPublishGlobalPath()
 	std_msgs::Int32MultiArray global_path;
 	int  num_checkpoints = checkpoints.size();
 	if(num_checkpoints != -1 and num_nodes != -1){
-		// std::cout << "checkpoints[0]" << std::endl;
-		// std::cout << checkpoints[0] << std::endl;
 		if(nodes[id2index(nodes,checkpoints[0])].type=="add_node"){
 			std::cout << "add node" << std::endl;
 			global_path.data.push_back(nodes[id2index(nodes,checkpoints[0])].child_id[0]);
 		}else{
-			global_path.data.push_back(checkpoints[0]);
+		 	global_path.data.push_back(checkpoints[0]);
 		}
 		for(int i=0; i<num_checkpoints-1; i++){
 			std::vector<int> path;
@@ -268,7 +268,7 @@ void Dijkstra::MakeAndPublishGlobalPath()
 				global_path.data.push_back(path[j]);
 			}
 		}
-		global_path.data.erase(global_path.data.begin());
+		// global_path.data.erase(global_path.data.begin());
 		std::cout << "------------------------------------------" << std::endl;
 		std::cout << "global_path" << std::endl;
 		for(int i=0;i<global_path.data.size();i++){
