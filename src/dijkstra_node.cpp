@@ -63,6 +63,7 @@ class Dijkstra{
 		int num_nodes=-1;
 		bool sub_current_edge = false;
 		bool first_sub_edge_flag = true;
+		bool first_pub_path = false;
 
 };
 
@@ -88,6 +89,10 @@ void Dijkstra::CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 	std::cout << "-------------" << std::endl;
 	for(int i=0;i<num_checkpoints; i++){
 		checkpoints.push_back(check_points.data[i]);
+	}
+	if(!first_pub_path && num_nodes>0){
+		MakeAndPublishGlobalPath();	
+		first_pub_path = true;
 	}
 }
 
@@ -124,6 +129,11 @@ void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstP
 			std::cout << "child["<< k <<"]:"  << child_id[k] 
 				<< "(" << child_cost[k] << ")" << std::endl;
 		}
+	}
+	int  num_checkpoints = checkpoints.size();
+	if(!first_pub_path && num_checkpoints>0){
+		MakeAndPublishGlobalPath();	
+		first_pub_path = true;
 	}
 }
 
