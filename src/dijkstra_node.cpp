@@ -26,7 +26,6 @@ class Node
 		int parent;
 		std::vector<int> child_id;
 		std::vector<double> child_cost;
-
 };
 
 class Dijkstra{
@@ -38,6 +37,8 @@ class Dijkstra{
 		bool ReplanHandler(amsl_navigation_msgs::Replan::Request&, amsl_navigation_msgs::Replan::Response&);
 	private:
 		ros::NodeHandle nh;
+		ros::NodeHandle private_nh;
+
 		//subscriber
 		ros::Subscriber node_edge_map_sub;
 		ros::Subscriber check_point_sub;
@@ -64,10 +65,14 @@ class Dijkstra{
 		bool sub_current_edge = false;
 		bool first_sub_edge_flag = true;
 		bool first_pub_path = false;
-
+		amsl_navigation_msgs::Edge first_edge;
+		int INIT_NODE0_ID;
+		int INIT_NODE1_ID;
+		double INIT_PROGRESS;
 };
 
 Dijkstra::Dijkstra()
+	: private_nh("~")
 {
 	//subscriber
 	node_edge_map_sub = nh.subscribe("/node_edge_map/map",1, &Dijkstra::NodeEdgeMapCallback, this);
@@ -79,6 +84,13 @@ Dijkstra::Dijkstra()
 
 	// service server
 	replan_server = nh.advertiseService("/global_path/replan", &Dijkstra::ReplanHandler, this);
+
+	private_nh.param("INIT_NODE0_ID", INIT_NODE0_ID, {0});
+	private_nh.param("INIT_NODE1_ID", INIT_NODE1_ID, {1});
+	private_nh.param("INIT_PROGRESS", INIT_PROGRESS, {0.0});
+	first_edge.node0_id = INIT_NODE0_ID;
+	first_edge.node1_id = INIT_NODE1_ID;
+	first_edge.progress = INIT_PROGRESS;
 }
 
 void Dijkstra::CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
@@ -91,6 +103,7 @@ void Dijkstra::CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 		checkpoints.push_back(check_points.data[i]);
 	}
 	if(!first_pub_path && num_nodes>0){
+		SetCurrentEdge(first_edge);
 		MakeAndPublishGlobalPath();	
 		first_pub_path = true;
 	}
@@ -132,6 +145,7 @@ void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstP
 	}
 	int  num_checkpoints = checkpoints.size();
 	if(!first_pub_path && num_checkpoints>0){
+		SetCurrentEdge(first_edge);
 		MakeAndPublishGlobalPath();	
 		first_pub_path = true;
 	}
@@ -142,6 +156,7 @@ void Dijkstra::CurrentEdgeCallback(const amsl_navigation_msgs::EdgeConstPtr& msg
 	amsl_navigation_msgs::Edge _edge = *msg;
 	SetCurrentEdge(_edge);
 	if(first_sub_edge_flag){
+		SetCurrentEdge(first_edge);
 		MakeAndPublishGlobalPath();
 		first_sub_edge_flag = false;
 	}
@@ -192,7 +207,7 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 					nodes[id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i])].close = true;
 					nodes[id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i])].parent = next_id;
 					nodes[id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i])].cost = 
-						nodes[id2index(nodes,next_id)].cost + nodes[id2index(nodes,next_id)].child_cost[i];
+					nodes[id2index(nodes,next_id)].cost + nodes[id2index(nodes,next_id)].child_cost[i];
 				}
 			}
 		}
@@ -225,9 +240,9 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 	}else{
 		checkpoints.insert(checkpoints.begin(), current_edge.node0_id);
 		num_checkpoints = checkpoints.size();
-		for(int i=0;i<num_checkpoints; i++){
-			std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
-		}
+	}
+	for(int i=0;i<num_checkpoints; i++){
+		std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
 	}
 }
 
