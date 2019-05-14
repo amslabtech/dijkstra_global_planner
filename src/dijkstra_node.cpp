@@ -254,10 +254,7 @@ void Dijkstra::MakeAndPublishGlobalPath()
 	std_msgs::Int32MultiArray global_path;
 	int  num_checkpoints = checkpoints.size();
 	if(num_checkpoints != -1 and num_nodes != -1){
-		if(nodes[id2index(nodes,checkpoints[0])].type=="add_node"){
-			std::cout << "add node" << std::endl;
-			global_path.data.push_back(nodes[id2index(nodes,checkpoints[0])].child_id[0]);
-		}else{
+		if(nodes[id2index(nodes,checkpoints[0])].type!="add_node"){
 		 	global_path.data.push_back(checkpoints[0]);
 		}
 		for(int i=0; i<num_checkpoints-1; i++){
