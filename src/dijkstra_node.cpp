@@ -225,24 +225,31 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 {
 	std::cout << "-----------------------" << std::endl;
 	current_edge = edge;
-	if(current_edge.progress != 0.0 && checkpoints[0]!=current_edge.node0_id){
-		std::string type = "add_node";
-		std::vector<int> child_id;
-		child_id.push_back(current_edge.node0_id);
-		child_id.push_back(current_edge.node1_id);
-		std::vector<double> child_cost;
-		child_cost.push_back(current_edge.distance*current_edge.progress);
-		child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
-		int start_node_id = nodes.size();
-		Node node(start_node_id, type, child_id, child_cost);
-		nodes.push_back(node);
-		checkpoints.insert(checkpoints.begin(), start_node_id);
-	}else{
-		if(current_edge.node0_id != checkpoints[0]){
+	int num_nodes = nodes.size();
+	for(int i=0;i<num_nodes; i++){
+		if(nodes[i].type=="add_node"){
+			nodes.erase(nodes.begin()+i);
+			checkpoints.erase(checkpoints.begin());
+		}
+	}
+	if(current_edge.node0_id!=checkpoints[0]){
+		if(current_edge.progress != 0.0){
+			std::string type = "add_node";
+			std::vector<int> child_id;
+			child_id.push_back(current_edge.node0_id);
+			child_id.push_back(current_edge.node1_id);
+			std::vector<double> child_cost;
+			child_cost.push_back(current_edge.distance*current_edge.progress);
+			child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
+			int add_node_id = nodes.size();
+			Node node(add_node_id, type, child_id, child_cost);
+			nodes.push_back(node);
+			checkpoints.insert(checkpoints.begin(), add_node_id);
+		}else{
 			checkpoints.insert(checkpoints.begin(), current_edge.node0_id);
 		}
-		num_checkpoints = checkpoints.size();
 	}
+	num_checkpoints = checkpoints.size();
 	for(int i=0;i<num_checkpoints; i++){
 		std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
 	}
