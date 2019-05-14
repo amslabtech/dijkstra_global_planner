@@ -51,6 +51,8 @@ class GlobalPathViz:
             x = (self.node_edge_map.nodes[current_node_id].point.x + self.node_edge_map.nodes[next_node_id].point.x ) / 2.0
             y = (self.node_edge_map.nodes[current_node_id].point.y + self.node_edge_map.nodes[next_node_id].point.y ) / 2.0
             yaw = np.arctan2(self.node_edge_map.nodes[next_node_id].point.y - self.node_edge_map.nodes[current_node_id].point.y, self.node_edge_map.nodes[next_node_id].point.x - self.node_edge_map.nodes[current_node_id].point.x)
+            x += np.cos(np.pi*0.5-yaw)
+            y -= np.sin(np.pi*0.5-yaw)
             length  = 0.0
             for j in range(len(self.node_edge_map.edges)):
                 if self.node_edge_map.edges[j].node0_id == current_node_id: 
