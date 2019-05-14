@@ -225,7 +225,7 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 {
 	std::cout << "-----------------------" << std::endl;
 	current_edge = edge;
-	if(current_edge.progress != 0.0){
+	if(current_edge.progress != 0.0 && checkpoints[0]!=current_edge.node0_id){
 		std::string type = "add_node";
 		std::vector<int> child_id;
 		child_id.push_back(current_edge.node0_id);
