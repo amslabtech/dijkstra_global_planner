@@ -219,10 +219,8 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 			id = nodes[id2index(nodes,id)].parent;
 		}
 		std::reverse(path.begin(), path.end());
-		return path;
-	}else{
-		return path;
 	}
+	return path;
 }
 
 void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
