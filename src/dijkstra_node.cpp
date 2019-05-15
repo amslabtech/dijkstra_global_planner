@@ -250,9 +250,9 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 		}
 	}
 	num_checkpoints = checkpoints.size();
-	for(int i=0;i<num_checkpoints; i++){
-		std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
-	}
+	// for(int i=0;i<num_checkpoints; i++){
+	// 	std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
+	// }
 }
 
 void Dijkstra::MakeAndPublishGlobalPath()
