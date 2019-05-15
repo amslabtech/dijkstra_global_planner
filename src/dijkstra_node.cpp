@@ -212,13 +212,17 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 		}
 	}
 	std::vector<int> path;
-	int id = goal_id;
-	while(id != start_id){
-		path.push_back(id);
-		id = nodes[id2index(nodes,id)].parent;
+	if(found){
+		int id = goal_id;
+		while(id != start_id){
+			path.push_back(id);
+			id = nodes[id2index(nodes,id)].parent;
+		}
+		std::reverse(path.begin(), path.end());
+		return path;
+	}else{
+		return path;
 	}
-	std::reverse(path.begin(), path.end());
-	return path;
 }
 
 void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
