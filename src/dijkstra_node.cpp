@@ -80,7 +80,7 @@ Dijkstra::Dijkstra()
 	current_edge_sub = nh.subscribe("/estimated_pose/edge",1, &Dijkstra::CurrentEdgeCallback, this);
 
 	//publisher
-	global_path_pub = nh.advertise<std_msgs::Int32MultiArray>("/global_path",1,true);
+	global_path_pub = nh.advertise<std_msgs::Int32MultiArray>("/global_path/path",1,true);
 
 	// service server
 	replan_server = nh.advertiseService("/global_path/replan", &Dijkstra::ReplanHandler, this);
@@ -98,7 +98,6 @@ void Dijkstra::CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 	std_msgs::Int32MultiArray check_points = *msg;
 	num_checkpoints = check_points.data.size();
 	checkpoints.clear();
-	std::cout << "-------------" << std::endl;
 	for(int i=0;i<num_checkpoints; i++){
 		checkpoints.push_back(check_points.data[i]);
 	}
@@ -128,10 +127,6 @@ void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstP
 				child_id.push_back(edges[j].node1_id);
 				child_cost.push_back(edges[j].distance);
 			}
-			// if(edges[j].node1_id == id){
-			// 	child_id.push_back(edges[j].node0_id);
-			// 	child_cost.push_back(edges[j].distance);
-			// }
 		}
 		int num_child = child_id.size();
 		Node node(id, map.nodes[i].type,child_id,child_cost);
@@ -225,7 +220,6 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 
 void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 {
-	std::cout << "-----------------------" << std::endl;
 	current_edge = edge;
 	int num_nodes = nodes.size();
 	for(int i=0;i<num_nodes; i++){
@@ -252,6 +246,7 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 		}
 	}
 	num_checkpoints = checkpoints.size();
+	// std::cout << "-----------------------" << std::endl;
 	// for(int i=0;i<num_checkpoints; i++){
 	// 	std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
 	// }

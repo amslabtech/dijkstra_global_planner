@@ -12,8 +12,8 @@
 - amsl_navigation_msgs
 
 ## Published topics
-- /global_path (std_msgs/Int32MultiArray)
-- /node_edge_map/viz/global_path (visualization_msgs/MarkerArray)
+- /global_path/path (std_msgs/Int32MultiArray)
+- /global_path/path/viz (visualization_msgs/MarkerArray)
 
 ## Subscribed topics
 - /node_edge_map/map (amsl_navigation_msgs/NodeEdgeMap)
@@ -30,4 +30,3 @@
   - node id of the end of initial edge (default: 1)
 - init_progress
   - initial progress on initial edge (default: 0.0)
-  

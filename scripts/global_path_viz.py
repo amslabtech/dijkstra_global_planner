@@ -14,11 +14,11 @@ class GlobalPathViz:
         rospy.init_node('global_path_viz')
 
         #Publisher
-        self.global_path_marker_pub = rospy.Publisher('/node_edge_map/viz/global_path', MarkerArray, queue_size=1, latch=True)
+        self.global_path_marker_pub = rospy.Publisher('/global_path/path/viz', MarkerArray, queue_size=1, latch=True)
 
         #Subscriber
         self.node_edge_map_sub = rospy.Subscriber('/node_edge_map/map', NodeEdgeMap, self.node_edge_map_callback)
-        self.global_path_sub = rospy.Subscriber('/global_path', Int32MultiArray, self.global_path_callback)
+        self.global_path_sub = rospy.Subscriber('/global_path/path', Int32MultiArray, self.global_path_callback)
 
         self.global_path_marker = MarkerArray()
         self.global_path = Int32MultiArray()

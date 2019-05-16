@@ -1,5 +1,4 @@
 <launch>
-
 	<arg name="init_node0_id" default="0"/>
 	<arg name="init_node1_id" default="1"/>
 	<arg name="init_progress" default="0.0"/>
