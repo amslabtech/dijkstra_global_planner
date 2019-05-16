@@ -96,11 +96,11 @@ Dijkstra::Dijkstra()
 void Dijkstra::CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 {
 	std_msgs::Int32MultiArray check_points = *msg;
-	num_checkpoints = check_points.data.size();
 	checkpoints.clear();
-	for(int i=0;i<num_checkpoints; i++){
-		checkpoints.push_back(check_points.data[i]);
+	for(auto check_point : check_points.data){
+		checkpoints.push_back(check_point);
 	}
+	num_nodes = nodes.size();
 	if(!first_pub_path && num_nodes>0){
 		SetCurrentEdge(first_edge);
 		MakeAndPublishGlobalPath();	
@@ -111,31 +111,31 @@ void Dijkstra::CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstPtr& msg)
 {
 	amsl_navigation_msgs::NodeEdgeMap map = *msg;
-	num_nodes = map.nodes.size();
-	int num_edges = map.edges.size();
 	nodes.clear();
 	edges.clear();
-	for(int i=0; i<num_edges; i++){
-		edges.push_back(map.edges[i]);
+	for(auto edge : map.edges){
+		edges.push_back(edge);
 	}
-	for(int i=0; i<num_nodes; i++){
-		int id = map.nodes[i].id;
+	for(auto n : map.nodes){
+		int id = n.id;
 		std::vector<int> child_id;
 		std::vector<double> child_cost;
-		for(int j=0; j<num_edges; j++){
-			if(edges[j].node0_id == id){
-				child_id.push_back(edges[j].node1_id);
-				child_cost.push_back(edges[j].distance);
+		for(auto edge : edges){
+			if(edge.node0_id == id){
+				child_id.push_back(edge.node1_id);
+				child_cost.push_back(edge.distance);
 			}
 		}
 		int num_child = child_id.size();
-		Node node(id, map.nodes[i].type,child_id,child_cost);
+		int i = 0;
+		Node node(id, n.type, child_id,child_cost);
 		nodes.push_back(node);
 		std::cout << "-------------" << std::endl;
 		std::cout << "node:"  << id << std::endl;
-		for(int k=0; k<num_child; k++){
-			std::cout << "child["<< k <<"]:"  << child_id[k] 
-				<< "(" << child_cost[k] << ")" << std::endl;
+		for(auto id: child_id){
+			std::cout << "child["<< i <<"]:"  << id 
+				<< "(" << child_cost[i] << ")" << std::endl;
+			i++;
 		}
 	}
 	int  num_checkpoints = checkpoints.size();
@@ -172,16 +172,15 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 	nodes[id2index(nodes,start_id)].open = true;
 	bool found = false;
 	bool resign = false;
-	int num_node = nodes.size();
 	while(!found and !resign){
 		//update open list
 		int min_id = -1;
 		float min_cost = 100000;
-		for(int i=0; i< num_node; i++){
-			if(nodes[i].open==true){
-				if(nodes[i].cost < min_cost){
-					min_cost = nodes[i].cost;
-					min_id = nodes[i].id;
+		for(auto n : nodes){
+			if(n.open==true){
+				if(n.cost < min_cost){
+					min_cost = n.cost;
+					min_id = n.id;
 				}
 			}
 		}
@@ -194,15 +193,17 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 			found = true;
 			// std::cout << "goal" << std::endl;
 		}else{
-			nodes[id2index(nodes,next_id)].open = false;
-			for(int i=0; i<nodes[id2index(nodes,next_id)].child_id.size(); i++){
-				if(nodes[id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i])].close == false){
-					nodes[id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i])].open = true;
-					nodes[id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i])].close = true;
-					nodes[id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i])].parent = next_id;
-					nodes[id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i])].cost = 
-					nodes[id2index(nodes,next_id)].cost + nodes[id2index(nodes,next_id)].child_cost[i];
+			nodes[id2index(nodes, next_id)].open = false;
+			int i = 0;
+			for(auto child_id : nodes[id2index(nodes,next_id)].child_id){
+				int next_child_id = id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i]);
+				if(nodes[next_child_id].close == false){
+					nodes[next_child_id].open = true;
+					nodes[next_child_id].close = true;
+					nodes[next_child_id].parent = next_id;
+					nodes[next_child_id].cost = nodes[id2index(nodes,next_id)].cost + nodes[id2index(nodes,next_id)].child_cost[i];
 				}
+				i++;
 			}
 		}
 	}
@@ -221,12 +222,13 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 {
 	current_edge = edge;
-	int num_nodes = nodes.size();
-	for(int i=0;i<num_nodes; i++){
-		if(nodes[i].type=="add_node"){
+	int i = 0;
+	for(auto n : nodes){
+		if(n.type=="add_node"){
 			nodes.erase(nodes.begin()+i);
 			checkpoints.erase(checkpoints.begin());
 		}
+		i++;
 	}
 	if(current_edge.node0_id!=checkpoints[0]){
 		if(current_edge.progress != 0.0){
@@ -245,10 +247,11 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 			checkpoints.insert(checkpoints.begin(), current_edge.node0_id);
 		}
 	}
-	num_checkpoints = checkpoints.size();
+	// int i = 0;
 	// std::cout << "-----------------------" << std::endl;
-	// for(int i=0;i<num_checkpoints; i++){
-	// 	std::cout << "checkpoints[" << i << "]:" << checkpoints[i] << std::endl;
+	// for(auto p : checkpoints){
+	// 	std::cout << "checkpoints[" << i << "]:" << p << std::endl;
+	// 	i++;
 	// }
 }
 
@@ -256,7 +259,8 @@ void Dijkstra::MakeAndPublishGlobalPath()
 {
 	std::cout << "-----------------------" << std::endl;
 	std_msgs::Int32MultiArray global_path;
-	int  num_checkpoints = checkpoints.size();
+	num_checkpoints = checkpoints.size();
+	num_nodes = nodes.size();
 	if(num_checkpoints != -1 and num_nodes != -1){
 		if(nodes[id2index(nodes,checkpoints[0])].type!="add_node"){
 		 	global_path.data.push_back(checkpoints[0]);
@@ -265,15 +269,15 @@ void Dijkstra::MakeAndPublishGlobalPath()
 			std::vector<int> path;
 			// std::cout << checkpoints[i] << " to "<< checkpoints[i+1] << std::endl;
 			path = CalcDijkstra(nodes,checkpoints[i],checkpoints[i+1]);
-			for(int j=0; j<path.size(); j++){
-				global_path.data.push_back(path[j]);
+			for(auto p : path){
+				global_path.data.push_back(p);
 			}
 		}
 		// global_path.data.erase(global_path.data.begin());
 		std::cout << "------------------------------------------" << std::endl;
 		std::cout << "global_path" << std::endl;
-		for(int i=0;i<global_path.data.size();i++){
-			std::cout << global_path.data[i] << std::endl;
+		for(auto path : global_path.data){
+			std::cout << path << std::endl;
 		}
 		std::cout << "------------------------------------------" << std::endl;
 		global_path_pub.publish(global_path);
@@ -281,19 +285,23 @@ void Dijkstra::MakeAndPublishGlobalPath()
 }
 
 int Dijkstra::childid2index(Node node, int id){
-	for(int i=0;i<node.child_id.size();i++){
-		if(node.child_id[i] == id){
+	int i = 0;
+	for(auto child_id :node.child_id){
+		if(child_id == id){
 			return i;
 		}
+		i++;
 	}
 	return -1;
 }
 
 int Dijkstra::id2index(std::vector<Node> nodes, int id){
-	for(int i=0;i<nodes.size();i++){
-		if(nodes[i].id == id){
+	int i = 0;
+	for(auto node : nodes){
+		if(node.id == id){
 			return i;
 		}
+		i++;
 	}
 	return -1;
 }
