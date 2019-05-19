@@ -27,5 +27,5 @@ class DijkstraGlobalPlannerTest(unittest.TestCase):
 
 if __name__ == '__main__':
     time.sleep(3)
-    rospy.init_node('test_dijkstra_global_planner')
-    rostest.rosrun('dijkstra_global_planner', 'test_dijkstra_global_planner', DijkstraGlobalPlannerTest)
+    rospy.init_node('test_dijkstra')
+    rostest.rosrun('dijkstra_global_planner', 'test_dijkstra', DijkstraGlobalPlannerTest)
