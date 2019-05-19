@@ -2,6 +2,6 @@
 	<include file="$(find amsl_navigation_managers)/launch/amsl_navigation_managers.launch"/>
 	<include file="$(find dijkstra_global_planner)/launch/global_planner.launch"/>
 
-	<test test-name="test_dijkstra" pkg="dijkstra_global_planner" type="test_dijkstra_global_planner.py"/>
+	<test test-name="test_dijkstra_global_planner" pkg="dijkstra_global_planner" type="test_dijkstra_global_planner.py" />
 
 </launch>
