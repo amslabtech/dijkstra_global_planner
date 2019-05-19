@@ -26,4 +26,3 @@ ENV ROS_WORKSPACE=/root/catkin_ws
 WORKDIR /root
 
 RUN cd catkin_ws/src && git clone https://github.com/amslabtech/amsl_navigation_managers --depth=1
-RUN cd catkin_ws/src && git clone https://github.com/amslabtech/dijkstra_global_planner --depth=1
