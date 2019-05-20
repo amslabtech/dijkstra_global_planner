@@ -114,7 +114,9 @@ void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstP
 	nodes.clear();
 	edges.clear();
 	for(auto edge : map.edges){
-		edges.push_back(edge);
+		if(!edge.impassable){
+			edges.push_back(edge);
+		}
 	}
 	for(auto n : map.nodes){
 		int id = n.id;
