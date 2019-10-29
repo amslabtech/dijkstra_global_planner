@@ -114,9 +114,7 @@ void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstP
 	nodes.clear();
 	edges.clear();
 	for(auto edge : map.edges){
-		if(!edge.impassable){
-			edges.push_back(edge);
-		}
+		edges.push_back(edge);
 	}
 	for(auto n : map.nodes){
 		int id = n.id;
@@ -140,7 +138,7 @@ void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstP
 			i++;
 		}
 	}
-	int  num_checkpoints = checkpoints.size();
+	int num_checkpoints = checkpoints.size();
 	if(!first_pub_path && num_checkpoints>0){
 		SetCurrentEdge(first_edge);
 		MakeAndPublishGlobalPath();	
@@ -198,7 +196,11 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
 			nodes[id2index(nodes, next_id)].open = false;
 			int i = 0;
 			for(auto child_id : nodes[id2index(nodes,next_id)].child_id){
+                ////////
+                //TODO//
+                ////////
 				int next_child_id = id2index(nodes,nodes[id2index(nodes,next_id)].child_id[i]);
+
 				if(nodes[next_child_id].close == false){
 					nodes[next_child_id].open = true;
 					nodes[next_child_id].close = true;
@@ -236,11 +238,16 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
 		if(current_edge.progress != 0.0){
 			std::string type = "add_node";
 			std::vector<int> child_id;
-			child_id.push_back(current_edge.node0_id);
-			child_id.push_back(current_edge.node1_id);
 			std::vector<double> child_cost;
-			child_cost.push_back(current_edge.distance*current_edge.progress);
-			child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
+            if(current_edge.impassable){
+			    child_id.push_back(current_edge.node0_id);
+			    child_cost.push_back(current_edge.distance*current_edge.progress);
+            }else{
+			    child_id.push_back(current_edge.node0_id);
+			    child_id.push_back(current_edge.node1_id);
+			    child_cost.push_back(current_edge.distance*current_edge.progress);
+			    child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
+            }
 			int add_node_id = nodes.size();
 			Node node(add_node_id, type, child_id, child_cost);
 			nodes.push_back(node);
