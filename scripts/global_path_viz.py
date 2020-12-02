@@ -4,7 +4,7 @@ import numpy as np
 import rospy
 import tf
 from geometry_msgs.msg import Quaternion
-from std_msgs.msg import Int32MultiArray 
+from std_msgs.msg import Int32MultiArray
 from visualization_msgs.msg import Marker, MarkerArray
 
 from amsl_navigation_msgs.msg import NodeEdgeMap
@@ -55,15 +55,15 @@ class GlobalPathViz:
             y -= np.sin(np.pi*0.5-yaw)
             length  = 0.0
             for j in range(len(self.node_edge_map.edges)):
-                if self.node_edge_map.edges[j].node0_id == current_node_id: 
-                    if self.node_edge_map.edges[j].node1_id == next_node_id: 
+                if self.node_edge_map.edges[j].node0_id == current_node_id:
+                    if self.node_edge_map.edges[j].node1_id == next_node_id:
                         length = self.node_edge_map.edges[j].distance*0.3
 
             n = Marker()
             n.ns = "global_path"
             n.header.frame_id = self.node_edge_map.header.frame_id
             n.header.stamp = time
-            n.id = i 
+            n.id = i
             n.action = Marker().ADD
             n.type = Marker().ARROW
             n.lifetime = rospy.Duration()
@@ -75,24 +75,24 @@ class GlobalPathViz:
         self.global_path_marker = global_path_marker
 
     def set_marker_scale(self, marker, x, y, z):
-	marker.scale.x = x
-	marker.scale.y = y
-	marker.scale.z = z
+        marker.scale.x = x
+        marker.scale.y = y
+        marker.scale.z = z
 
     def set_marker_position(self, marker, x, y, z):
-	marker.pose.position.x = x
-	marker.pose.position.y = y
-	marker.pose.position.z = z
+        marker.pose.position.x = x
+        marker.pose.position.y = y
+        marker.pose.position.z = z
 
     def set_marker_rgb(self, marker, r, g, b, a=0.7):
-	marker.color.r = r
-	marker.color.g = g
-	marker.color.b = b
-	marker.color.a = a
+        marker.color.r = r
+        marker.color.g = g
+        marker.color.b = b
+        marker.color.a = a
 
     def set_marker_orientation(self, marker, r, p, y):
-	q = tf.transformations.quaternion_from_euler(r, p, y)
-	marker.pose.orientation = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
+        q = tf.transformations.quaternion_from_euler(r, p, y)
+        marker.pose.orientation = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
 
 if __name__=='__main__':
     global_path_viz = GlobalPathViz()
