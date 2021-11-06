@@ -78,12 +78,11 @@ Dijkstra::Dijkstra()
     node_edge_map_sub = nh.subscribe("/node_edge_map/map",1, &Dijkstra::NodeEdgeMapCallback, this);
     check_point_sub = nh.subscribe("/node_edge_map/checkpoint",1, &Dijkstra::CheckPointCallback, this);
     current_edge_sub = nh.subscribe("/estimated_pose/edge",1, &Dijkstra::CurrentEdgeCallback, this);
+    // service server
+    replan_server = nh.advertiseService("/global_path/replan", &Dijkstra::ReplanHandler, this);
 
     //publisher
     global_path_pub = nh.advertise<std_msgs::Int32MultiArray>("/global_path/path",1,true);
-
-    // service server
-    replan_server = nh.advertiseService("/global_path/replan", &Dijkstra::ReplanHandler, this);
 
     private_nh.param("INIT_NODE0_ID", INIT_NODE0_ID, {0});
     private_nh.param("INIT_NODE1_ID", INIT_NODE1_ID, {1});
@@ -95,21 +94,25 @@ Dijkstra::Dijkstra()
 
 void Dijkstra::CheckPointCallback(const std_msgs::Int32MultiArrayConstPtr& msg)
 {
+    // std::cout << "in the check point callback" << std::endl;
     std_msgs::Int32MultiArray check_points = *msg;
     checkpoints.clear();
     for(auto check_point : check_points.data){
         checkpoints.push_back(check_point);
     }
     num_nodes = nodes.size();
+    // std::cout << "num_nodes: " << num_nodes << std::endl;
+    // std::cout << "first_pub_path: " << first_pub_path << std::endl;
     if(!first_pub_path && num_nodes>0){
-        SetCurrentEdge(first_edge);
-        MakeAndPublishGlobalPath();    
+        SetCurrentEdge(first_edge); 
+        MakeAndPublishGlobalPath(); 
         first_pub_path = true;
     }
 }
 
 void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstPtr& msg)
 {
+    std::cout << "in the node edge map callback" << std::endl;
     amsl_navigation_msgs::NodeEdgeMap map = *msg;
     nodes.clear();
     edges.clear();
@@ -118,29 +121,31 @@ void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstP
             edges.push_back(edge);
         }
     }
+    // nodeの個数分
     for(auto n : map.nodes){
         int id = n.id;
         std::vector<int> child_id;
         std::vector<double> child_cost;
         for(auto edge : edges){
             if(edge.node0_id == id){
-                child_id.push_back(edge.node1_id);
-                child_cost.push_back(edge.distance);
+                child_id.push_back(edge.node1_id); // int
+                child_cost.push_back(edge.distance); // 距離感をみてコスト付
             }
         }
         int num_child = child_id.size();
         int i = 0;
         Node node(id, n.type, child_id,child_cost);
         nodes.push_back(node);
-        std::cout << "-------------" << std::endl;
-        std::cout << "node:"  << id << std::endl;
-        for(auto id: child_id){
-            std::cout << "child["<< i <<"]:"  << id 
-                << "(" << child_cost[i] << ")" << std::endl;
-            i++;
-        }
+        // std::cout << "-------------" << std::endl;
+        // std::cout << "node:"  << id << std::endl;
+        // for(auto id: child_id){
+        //     std::cout << "child["<< i <<"]:"  << id << "(" << child_cost[i] << ")" << std::endl;
+        //     i++;
+        // }
     }
     int num_checkpoints = checkpoints.size();
+    std::cout << "num_checkpoints" << num_checkpoints << std::endl;
+    std::cout << "first_pub_path: " << first_pub_path << std::endl;
     if(!first_pub_path && num_checkpoints>0){
         SetCurrentEdge(first_edge);
         MakeAndPublishGlobalPath();    
@@ -150,6 +155,7 @@ void Dijkstra::NodeEdgeMapCallback(const amsl_navigation_msgs::NodeEdgeMapConstP
 
 void Dijkstra::CurrentEdgeCallback(const amsl_navigation_msgs::EdgeConstPtr& msg)
 {
+    // std::cout << "current edge callback!!!!" << std::endl;
     amsl_navigation_msgs::Edge _edge = *msg;
     SetCurrentEdge(_edge);
     if(first_sub_edge_flag){
@@ -180,20 +186,22 @@ std::vector<int> Dijkstra::CalcDijkstra(std::vector<Node> nodes, int start_id, i
         float min_cost = 100000;
         for(auto n : nodes){
             if(n.open==true){
-                if(n.cost < min_cost){
+                if(n.cost < min_cost){ // もし、ターゲットのnodeへのコストが今持ってるコストより小さければ更新
+                    // 最終的に一番小さいコストのnodeが残る
                     min_cost = n.cost;
                     min_id = n.id;
                 }
             }
         }
-        // std::cout << "min_id: " << min_id << std::endl;
+        // std::cout << "min_cost:" << min_cost << std::endl;
+        // std::cout << "min_id:" << min_id << std::endl;
         int next_id = min_id;
-        if(min_id == -1){
+        if(min_id == -1){ // 特にidに更新がない
             resign = true;
             std::cout << "resign" << std::endl;
-        }else if(next_id == goal_id){
+        }else if(next_id == goal_id){ // 次の選択nodeがcheckpointなら
             found = true;
-            // std::cout << "goal" << std::endl;
+            // std::cout << "goal!!! yeah!!!!" << std::endl;
         }else{
             nodes[id2index(nodes, next_id)].open = false;
             int i = 0;
@@ -231,22 +239,27 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
     int i = 0;
     for(auto n : nodes){
         if(n.type=="add_node"){
+            std::cout << "add nodes!!!!" << std::endl;
             nodes.erase(nodes.begin()+i);
             checkpoints.erase(checkpoints.begin());
+            std::cout << "nodes:" << nodes.size() << std::endl;
         }
         i++;
     }
     if(current_edge.node0_id!=checkpoints[0]){
         if(current_edge.progress != 0.0){
+            std::cout << "add edges!!!!" << std::endl;
             std::string type = "add_node";
             std::vector<int> child_id;
             std::vector<double> child_cost;
+            // 通れない？
             if(current_edge.impassable){
-                child_id.push_back(current_edge.node0_id);
+                child_id.push_back(current_edge.node0_id); //startセット？
                 child_cost.push_back(current_edge.distance*current_edge.progress);
-            }else{
-                child_id.push_back(current_edge.node0_id);
-                child_id.push_back(current_edge.node1_id);
+            }
+            else{
+                child_id.push_back(current_edge.node0_id); // どこから？
+                child_id.push_back(current_edge.node1_id); // どこまで？
                 child_cost.push_back(current_edge.distance*current_edge.progress);
                 child_cost.push_back(current_edge.distance*(1.0-current_edge.progress));
             }
@@ -254,7 +267,10 @@ void Dijkstra::SetCurrentEdge(amsl_navigation_msgs::Edge& edge)
             Node node(add_node_id, type, child_id, child_cost);
             nodes.push_back(node);
             checkpoints.insert(checkpoints.begin(), add_node_id);
-        }else{
+            std::cout << "add_node_id size: " << add_node_id << std::endl;
+            std::cout << "child cost: " << child_cost.size() << std::endl;
+            std::cout << "child id: " << child_id.size() << std::endl;
+        }else{ // current == 0.0の時
             checkpoints.insert(checkpoints.begin(), current_edge.node0_id);
         }
     }
@@ -278,10 +294,10 @@ void Dijkstra::MakeAndPublishGlobalPath()
         }
         for(int i=0; i<num_checkpoints-1; i++){
             std::vector<int> path;
-            // std::cout << checkpoints[i] << " to "<< checkpoints[i+1] << std::endl;
-            path = CalcDijkstra(nodes,checkpoints[i],checkpoints[i+1]);
+            // std::cout << checkpoints[i] << " to "<< checkpoints[i+1] << std::endl; // nodeの移動ルート表示
+            path = CalcDijkstra(nodes, checkpoints[i], checkpoints[i+1]); // vector
             for(auto p : path){
-                global_path.data.push_back(p);
+                global_path.data.push_back(p); // 最小コストでのpathを詰めていく
             }
         }
         // global_path.data.erase(global_path.data.begin());

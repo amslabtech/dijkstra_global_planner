@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="hz" default="20"/>
+    <arg name="excess_detection_ratio" default="1.2"/>
+    <arg name="goal_radius" default="0.5"/>
+    <arg name="enable_requesting_replanning" default="false"/>
+    <arg name="intersection_acceptance_progress_ratio" default="0.7"/>
+    <arg name="robot_frame" default="base_link"/>
+    <arg name="goal_dis" default="5.0"/>
+    <arg name="global_path_index_offset" default="1"/>
+    <arg name="local_map" default="/local_map"/>
+    <arg name="local_goal_angle" default="2.0"/>
+    <arg name="d_local_goal_angle" default="0.4"/>
+    <arg name="w" default="0.4"/>
+    <arg name="border_distance" default="5.0"/>
+	
+
+    <node pkg="dijkstra_global_planner" type="local_goal_creator" name="local_goal_creator" >
+        <param name="LOCAL_GOAL_ANGLE" value="$(arg local_goal_angle)"/>
+        <param name="D_LOCAL_GOAL_ANGLE" value="$(arg d_local_goal_angle)"/>
+        <param name="GOAL_DIS" value="$(arg goal_dis)"/>
+        <remap from="/local_map" to="$(arg local_map)"/>
+        <remap from="/local_map" to="/local_map/expand"/>
+        <param name="border_distance" value="$(arg border_distance)"/>
+    </node>
+    
+    <!-- <node pkg="local_path_planner" type="dummy_locali" name="dummy_locali" output="screen">
+        <param name="w" value="$(arg w)"/>
+    </node> -->
+    
+    <!-- <node pkg="dijkstra_global_planner" type="global_path_creator" name="global_path_creator" output="screen"> -->
+	<!-- </node> -->
+    <!-- <node pkg="rviz" type="rviz" name="rviz100" args="-d $(find local_path_planner)/config/check_local_goal.rviz"/> -->
+</launch>

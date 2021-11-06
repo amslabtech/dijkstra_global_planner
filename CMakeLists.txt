@@ -136,6 +136,8 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/dijkstra_global_planner_node.cpp)
 add_executable(dijkstra_node src/dijkstra_node.cpp)
+add_executable(global_path_creator src/global_path_creator.cpp)
+add_executable(local_goal_creator src/local_goal_creator.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,6 +155,8 @@ add_dependencies(dijkstra_node amsl_navigation_msgs_generate_messages_cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(dijkstra_node ${catkin_LIBRARIES})
+target_link_libraries(global_path_creator ${catkin_LIBRARIES})
+target_link_libraries(local_goal_creator ${catkin_LIBRARIES})
 
 #############
 ## Install ##
