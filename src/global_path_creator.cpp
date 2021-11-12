@@ -58,14 +58,18 @@ void GlobalPathCreator::node_edge_map_callback(const amsl_navigation_msgs::NodeE
 {
     map = *msg_map;
     std::cout << "subscribe map information" << std::endl;
+    node_edge_flag = true;
+    if(global_path_flag && node_edge_flag)
+        make_global_path(); // 順番  
 }
 
 void GlobalPathCreator::path_callback(const std_msgs::Int32MultiArray::ConstPtr& msg_path)
 {
-    std::cout << "subscribe global_path" << std::endl;
+    std::cout << "subscribe global_path " << std::endl;
     global_path_num = *msg_path;
     global_path_flag = true;
-    make_global_path();  
+    if(global_path_flag && node_edge_flag)
+        make_global_path(); // 順番  
 }
 
 void GlobalPathCreator::make_global_path()
@@ -86,11 +90,12 @@ void GlobalPathCreator::make_global_path()
         }
         count_i ++;
     }
-    std::cout << "i: " << count_i << " j: " << count_j << std::endl;
-    std::cout << "global_path poses size:  " << global_path.poses.size() << std::endl;
+    // std::cout << "i: " << count_i << " j: " << count_j << std::endl;
+    // std::cout << "global_path poses size:  " << global_path.poses.size() << std::endl;
     global_path.header.frame_id = "map";
     // while(!replan_flag) // 応急処置
-    for(int i = 0; i < 1000000; i++) // for visualize
+    // for(int i = 0; i < 1000000; i++) // for visualize
+    // if(global_path.poses.size() > 0)    
         pub_path.publish(global_path);
 }
 void GlobalPathCreator::process()

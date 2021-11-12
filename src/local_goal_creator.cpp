@@ -56,21 +56,25 @@ LocalGoalCreator::LocalGoalCreator():private_nh("~")
 
 void LocalGoalCreator::path_callback(const std_msgs::Int32MultiArray::ConstPtr& msg_path)
 {
+    std::cout<<"path callback "<<std::endl;
     global_path_num = *msg_path;
     have_recieved_multi_array = true;
 }
 void LocalGoalCreator::global_path_callback(const nav_msgs::Path::ConstPtr& msg)
 {
-    if(have_recieved_path) return;
+    std::cout<<"global_path callback "<<std::endl;
     global_path=*msg;
+    std::cout<<"global_path size: " << global_path.poses.size() << std::endl;
     goal_number = 0;
     local_goal = global_path.poses[goal_number]; // goal_number番目の位置
     have_recieved_path = true;
 }
 void LocalGoalCreator::current_pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
+    std::cout<<"current_pose callback "<<std::endl;
     current_pose = *msg;
-    if(!have_recieved_pose) have_recieved_pose = true;
+    // if(!have_recieved_pose) 
+    have_recieved_pose = true;
 }
 void LocalGoalCreator::select_next_goal()
 {
@@ -92,7 +96,7 @@ void LocalGoalCreator::process()
     ros::Rate loop_rate(hz);
     while(ros::ok())
     {
-        if(have_recieved_path && have_recieved_multi_array)
+        if(have_recieved_path && have_recieved_multi_array )
         {
             select_next_goal();
             local_goal.header.frame_id = "map";

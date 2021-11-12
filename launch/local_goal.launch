@@ -17,7 +17,7 @@
     <arg name="border_distance" default="5.0"/>
 	
 
-    <node pkg="dijkstra_global_planner" type="local_goal_creator" name="local_goal_creator" >
+    <node pkg="dijkstra_global_planner" type="local_goal_creator" name="local_goal_creator" output="screen">
         <param name="LOCAL_GOAL_ANGLE" value="$(arg local_goal_angle)"/>
         <param name="D_LOCAL_GOAL_ANGLE" value="$(arg d_local_goal_angle)"/>
         <param name="GOAL_DIS" value="$(arg goal_dis)"/>
