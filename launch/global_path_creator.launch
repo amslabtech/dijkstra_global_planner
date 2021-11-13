@@ -1,17 +1,15 @@
 <launch>
-	<arg name="init_node0_id" default="0"/>
+	<!-- <arg name="init_node0_id" default="0"/>
 	<arg name="init_node1_id" default="1"/>
 	<arg name="init_progress" default="0.0"/>
 
-    <!-- <node pkg="dijkstra_global_planner" type="global_path_viz.py" name="global_path_viz" ns="global_planner"/> -->
 
     <node pkg="dijkstra_global_planner" type="dijkstra_node" name="dijkstra" ns="global_planner" output="screen">
 		<param name="INIT_NODE0_ID" value="$(arg init_node0_id)" type="int"/>
 		<param name="INIT_NODE1_ID" value="$(arg init_node1_id)" type="int"/>
 	 	<param name="INIT_PROGRESS" value="$(arg init_progress)" type="double"/>
-	</node>
-    
-	<!-- <node pkg="dijkstra_global_planner" type="global_path_creator" name="global_path_creator" output="screen">
 	</node> -->
-
+    <!-- <node pkg="dijkstra_global_planner" type="global_path_viz.py" name="global_path_viz" ns="global_planner"/> -->
+    <node pkg="dijkstra_global_planner" type="global_path_creator" name="global_path_creator" output="screen">
+	</node>
 </launch>
